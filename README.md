@@ -2,31 +2,31 @@
 
 This project is a full-stack, scalable, and reliable webhook relay system built for the AlgoHire recruitment platform. It acts as a centralized gateway to receive events from internal services, process them asynchronously, and deliver them securely to subscribed external client systems (e.g., HRMS, CRM).
 
-The system features a real-time management dashboard for configuring webhooks, monitoring delivery status, and ensuring operational observability.
+A real-time management dashboard enables admins to configure webhooks, monitor deliveries, and ensure operational observability.
 
-## Key Features
+## 🚀 Key Features
 
--   **Asynchronous Event Processing**: Uses a Redis-based queue (BullMQ) to process events without blocking the main API, ensuring high throughput.
--   **Guaranteed Delivery with Retries**: Automatically retries failed webhook deliveries with an exponential backoff strategy to handle temporary client-side failures.
+-   **Asynchronous Event Processing**: Uses a Redis-based queue (BullMQ) to process events without blocking the main API.
+-   **Guaranteed Delivery with Retries**: Automatic retry with exponential backoff for failed webhook deliveries.
 -   **Secure by Design**:
-    -   **HMAC Signatures**: Every outgoing webhook is signed with a unique secret key, allowing clients to verify its authenticity.
-    -   **API Key Authentication**: The management dashboard APIs are protected to prevent unauthorized access.
--   **Real-Time Monitoring Dashboard**: A React/Next.js frontend provides a live view of all subscriptions and delivery logs, with data polling every 5 seconds.
--   **Performance Optimized**: A Redis caching layer for subscriber lookups significantly reduces database load under high traffic.
--   **Containerized Environment**: The entire application stack is managed with Docker Compose, allowing for consistent setup and easy deployment.
+    -   **HMAC Signatures**: Each outgoing webhook is signed with a secret key for authenticity.
+    -   **API Key Authentication**: Protects dashboard endpoints from unauthorized access.
+-   **Real-Time Monitoring Dashboard**: Next.js frontend updates every 5 seconds for live monitoring.
+-   **Performance Optimized**: Redis caching reduces database load under heavy traffic.
+-   **Containerized Setup**: Managed via Docker Compose for consistent setup and deployment.
 
-## Architecture Overview
+## 🧱 Architecture Overview
 
-The system is built on a modern, microservices-friendly architecture, separating concerns for scalability and maintainability.
+| Component              | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| **Frontend (Next.js)** | Admin dashboard for managing subscriptions and viewing delivery logs |
+| **Backend API (Express.js)** | Receives events, manages subscriptions, and serves data to the frontend |
+| **Worker Service**     | Consumes jobs from Redis and handles webhook dispatch        |
+| **PostgreSQL**         | Persists events, subscriptions, and delivery logs            |
+| **Redis**              | Acts as cache and message broker (BullMQ)                    |
+| **Migrator**           | Runs DB migrations automatically on startup                  |
 
--   **Frontend (Next.js)**: A client-side rendered dashboard for administrators to manage the system.
--   **Backend API (Node.js/Express)**: Receives events from internal services, manages subscriptions, and serves data to the dashboard.
--   **Background Worker (Node.js)**: A separate process that listens to the Redis queue and is solely responsible for dispatching webhooks.
--   **PostgreSQL**: The primary database for storing events, subscriptions, and delivery logs.
--   **Redis**: Serves as both a message broker (for the BullMQ job queue) and a caching layer.
--   **Migrator**: A short-lived container that automatically runs database migrations on startup to ensure the schema is up-to-date.
-
-## Technology Stack
+## 🧩 Technology Stack
 
 -   **Backend**: Node.js, Express.js, BullMQ
 -   **Frontend**: Next.js, React, TypeScript, Tailwind CSS, ShadCN UI
@@ -35,55 +35,201 @@ The system is built on a modern, microservices-friendly architecture, separating
 -   **Containerization**: Docker & Docker Compose
 -   **Libraries**: `axios`, `pg`, `ioredis`, `cors`
 
-## Setup and Installation
+## ⚙️ Setup & Installation
 
 ### Prerequisites
 
 -   Docker
 -   Docker Compose
 
-### Running the Application
+### Run the Application
 
-1.  **Clone the repository:**
+1.  Clone the repository:
     ```bash
     git clone <your-repo-url>
     cd algohire-webhook-relay
     ```
-
-2.  **Build and run the services:**
-    This single command will build all the images, run database migrations, and start the frontend, backend API, and worker services.
+2.  Build and run the services:
     ```bash
     docker-compose up --build
     ```
+3.  Access the application:
+    -   **Frontend Dashboard** → `http://localhost:3000`
+    -   **Backend API** → `http://localhost:8000`
 
-3.  **Access the application:**
-    -   **Frontend Dashboard**: `http://localhost:3000`
-    -   **Backend API**: `http://localhost:8000`
+## 📂 Folder Structure
 
-## Data Flow
+```
+algohire-webhook-relay/
+├── frontend/         # Next.js dashboard
+├── backend/          # Express API for events & subscriptions
+├── worker/           # BullMQ worker for async webhook dispatch
+├── migrator/         # Auto-run DB migrations
+├── docker-compose.yml
+└── README.md
+```
 
-The lifecycle of an event is designed for reliability and observability:
+## 🔄 Data Flow
 
-1.  **Receipt**: An internal service sends an event to `POST /api/events`.
-2.  **Storage**: The event is validated and stored in the `events` table with a unique ID.
-3.  **Queuing**: A job is added to the Redis queue via BullMQ, configured with 3 retry attempts.
-4.  **Processing**: The background worker picks up the job.
-5.  **Dispatch**: The worker fetches subscribers (from cache or DB), generates an HMAC signature, and sends the webhook via an HTTP `POST` request.
-6.  **Logging**: The outcome (success or failure) of the delivery attempt is saved to the `delivery_logs` table.
+1.  **Receipt**: Internal service sends event → `POST /api/events`
+2.  **Storage**: Event saved in PostgreSQL (`events` table)
+3.  **Queueing**: Job added to Redis (BullMQ)
+4.  **Processing**: Worker service dispatches webhook
+5.  **Logging**: Result recorded in `delivery_logs`
+6.  **Dashboard**: Admin views logs in real time
 
-## Security Features
+## 🔐 Security
 
 ### Outgoing Webhooks (HMAC)
 
-Each webhook request includes an `X-AlgoHire-Signature` header. The client can use their unique secret key to generate their own signature from the request body and compare it to the one in the header to verify the sender's identity.
+Each webhook request includes an `X-AlgoHire-Signature` header. Clients can verify authenticity by regenerating the hash using their secret key and comparing signatures.
 
 ### Dashboard API (API Key)
 
-All endpoints related to managing subscriptions and viewing logs (`/api/subscriptions`, `/api/logs`) require a secret `X-API-Key` to be sent in the header, preventing public access.
+All management routes (subscriptions, logs) require an `X-API-Key` header for access control.
 
-## Future Improvements
+## 🧰 API Reference with Examples
 
--   **User Authentication**: Implement a full login system for the dashboard instead of a single global API key.
--   **Advanced Filtering**: Add more advanced filtering and search capabilities to the delivery logs page.
--   **Manual Retry from UI**: Add a "Retry" button on failed logs in the dashboard to manually re-queue a job.
--   **Webhook Deactivation**: Automatically deactivate a webhook subscription after a certain number of consecutive failures to prevent system overload.
+### 1. Send an Event
+
+**Endpoint**: `POST /api/events`
+
+Triggers a new event to be queued for webhook delivery.
+
+**Example Request**:
+
+```bash
+curl --location 'http://localhost:8000/api/events' \
+--header 'Content-Type: application/json' \
+--data '{
+  "eventType": "candidate.created",
+  "payload": {
+    "candidateId": "cnd_abc123",
+    "name": "Jane Doe",
+    "status": "Screening"
+  }
+}'
+```
+
+**Example Response**:
+
+```json
+{
+  "status": "success",
+  "message": "Event received and queued for processing.",
+  "eventId": "5b2b73a3-19bf-4bfb-9a20-e59f52887f22"
+}
+```
+
+### 2. Create a Webhook Subscription
+
+**Endpoint**: `POST /api/subscriptions`
+
+Registers an external endpoint for receiving a specific event type.
+
+**Example Request**:
+
+```bash
+curl --location 'http://localhost:8000/api/subscriptions' \
+--header 'Content-Type: application/json' \
+--header 'X-API-Key: fdsakhfdsjkhfewur202387fhdihweio3928' \
+--data '{
+  "eventType": "candidate.created",
+  "endpointUrl": "https://webhook.site/your-unique-url"
+}'
+```
+
+**Example Response**:
+
+```json
+{
+  "id": "1043ccb5-7e58-4530-a50a-dc52d1d30707",
+  "event_type": "candidate.created",
+  "endpoint_url": "https://webhook.site/your-unique-url",
+  "is_active": true,
+  "created_at": "2025-10-19T12:41:15.392Z"
+}
+```
+
+### 3. List All Subscriptions
+
+**Endpoint**: `GET /api/subscriptions`
+
+Returns all active webhook subscriptions.
+
+**Example Request**:
+
+```bash
+curl --location 'http://localhost:8000/api/subscriptions' \
+--header 'X-API-Key: fdsakhfdsjkhfewur202387fhdihweio3928'
+```
+
+**Example Response**:
+
+```json
+[
+  {
+    "id": "1043ccb5-7e58-4530-a50a-dc52d1d30707",
+    "event_type": "candidate.created",
+    "endpoint_url": "https://webhook.site/your-unique-url",
+    "is_active": true
+  }
+]
+```
+
+### 4. Fetch Webhook Delivery Logs
+
+**Endpoint**: `GET /api/logs`
+
+Retrieve delivery attempts and their status.
+
+**Example Request**:
+
+```bash
+curl --location 'http://localhost:8000/api/logs' \
+--header 'X-API-Key: fdsakhfdsjkhfewur202387fhdihweio3928'
+```
+
+**Example Response**:
+
+```json
+[
+  {
+    "id": "35df74a2-d9ee-41df-b023-9e190c6ae272",
+    "status": "failed",
+    "response_status_code": 404,
+    "attempted_at": "2025-10-19T12:46:33.082Z",
+    "endpoint_url": "https://webhook.site/your-unique-url",
+    "event_type": "candidate.created"
+  },
+  {
+    "id": "4ba3fe71-9218-4da0-9bb8-1a14a19f48f7",
+    "status": "failed",
+    "response_status_code": 404,
+    "attempted_at": "2025-10-19T12:46:22.397Z",
+    "endpoint_url": "https://webhook.site/your-unique-url",
+    "event_type": "candidate.created"
+  },
+  {
+    "id": "6127551b-234e-4047-8001-96ea53b844d3",
+    "status": "failed",
+    "response_status_code": 404,
+    "attempted_at": "2025-10-19T12:46:16.763Z",
+    "endpoint_url": "https://webhook.site/your-unique-url",
+    "event_type": "candidate.created"
+  }
+]
+```
+
+## 📊 Frontend Dashboard
+
+-   **Auto-refresh**: Fetches new data every 5 seconds.
+-   **Views**: Subscriptions, delivery logs, event status.
+-   **Admin-only Access**: API key required for all dashboard data requests.
+
+## 🔮 Future Improvements
+
+-   User authentication for dashboard
+-   Advanced log filtering & search
+-   Manual retry for failed webhooks from UI
+-   Auto-deactivation after multiple consecutive failures
