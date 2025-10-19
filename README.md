@@ -4,6 +4,11 @@ This project is a full-stack, scalable, and reliable webhook relay system built 
 
 A real-time management dashboard enables admins to configure webhooks, monitor deliveries, and ensure operational observability.
 
+## 🖥️ Dashboard Preview
+
+![AlgoHire Webhook Dashboard](./dashboard-ui.png)
+
+
 ## 🚀 Key Features
 
 -   **Asynchronous Event Processing**: Uses a Redis-based queue (BullMQ) to process events without blocking the main API.
@@ -46,7 +51,7 @@ A real-time management dashboard enables admins to configure webhooks, monitor d
 
 1.  Clone the repository:
     ```bash
-    git clone <your-repo-url>
+    git clone https://github.com/niteshjangid29/algohire-project.git
     cd algohire-webhook-relay
     ```
 2.  Build and run the services:
@@ -61,10 +66,10 @@ A real-time management dashboard enables admins to configure webhooks, monitor d
 
 ```
 algohire-webhook-relay/
-├── frontend/         # Next.js dashboard
-├── backend/          # Express API for events & subscriptions
-├── worker/           # BullMQ worker for async webhook dispatch
-├── migrator/         # Auto-run DB migrations
+├── frontend/                  # Next.js dashboard
+├── backend/                   # Express API for events & subscriptions
+├── /backend/worker/           # BullMQ worker for async webhook dispatch
+├── /backend/migrator/         # Auto-run DB migrations
 ├── docker-compose.yml
 └── README.md
 ```
